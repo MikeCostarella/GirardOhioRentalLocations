@@ -9,7 +9,7 @@ interface Props {
   locations: RentalLocation[];
   hidden: boolean;
   userPos: { lat: number; lon: number } | null;
-  flyTo: { lat: number; lng: number; key: number } | null;
+  flyTo: { lat: number; lng: number; key: number; fit?: boolean } | null;
   onSelect: (loc: RentalLocation) => void;
   showMunicipalities: boolean;
   showTownships: boolean;
@@ -25,14 +25,27 @@ const userIcon = L.divIcon({
   iconAnchor: [9, 9],
 });
 
-// Imperatively fly the map when a search result / list row is chosen.
+// Imperatively move the map when a search result / list row is chosen, or when
+// the user is located. If `fit` is set (user is outside the Girard area) we fit
+// a view that includes both the user and Girard so Girard stays visible;
+// otherwise we fly to the point at street zoom.
 function FlyController({ flyTo }: { flyTo: Props['flyTo'] }) {
   const map = useMap();
   const lastKey = useRef<number>(-1);
   useEffect(() => {
     if (flyTo && flyTo.key !== lastKey.current) {
       lastKey.current = flyTo.key;
-      map.flyTo([flyTo.lat, flyTo.lng], 18, { duration: 0.6 });
+      if (flyTo.fit) {
+        // Include both the user's position and Girard, padded, and cap the zoom
+        // so we never zoom in past a useful overview.
+        const bounds = L.latLngBounds(
+          [flyTo.lat, flyTo.lng],
+          GIRARD_CENTER
+        );
+        map.flyToBounds(bounds, { padding: [60, 60], maxZoom: 13, duration: 0.6 });
+      } else {
+        map.flyTo([flyTo.lat, flyTo.lng], 18, { duration: 0.6 });
+      }
     }
   }, [flyTo, map]);
   return null;

@@ -4,7 +4,7 @@ import './App.css';
 import type { RentalLocation, ViewMode } from './types';
 import type { UnitFilter } from './lib';
 import { filterLocations } from './lib';
-import { useGeolocation } from './useGeolocation';
+import { useGeolocation, isNearGirard } from './useGeolocation';
 import RentalMap from './components/RentalMap';
 import RentalList from './components/RentalList';
 import MenuDrawer from './components/MenuDrawer';
@@ -19,7 +19,7 @@ export default function App() {
   const [filter, setFilter] = useState<UnitFilter>('all');
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState<RentalLocation | null>(null);
-  const [flyTo, setFlyTo] = useState<{ lat: number; lng: number; key: number } | null>(null);
+  const [flyTo, setFlyTo] = useState<{ lat: number; lng: number; key: number; fit?: boolean } | null>(null);
 
   // Boundary overlays default ON.
   const [showMunicipalities, setShowMunicipalities] = useState(true);
@@ -92,7 +92,15 @@ export default function App() {
         forceFlyNext.current = false;
         // Only yank to the map view when the user explicitly asked to locate.
         if (requested) setView('map');
-        setFlyTo({ lat: geo.position.lat, lng: geo.position.lon, key: Date.now() });
+        // If the user is outside the Girard area, fit a view that keeps Girard
+        // visible rather than zooming all the way in on them.
+        const fit = !isNearGirard(geo.position.lat, geo.position.lon);
+        setFlyTo({
+          lat: geo.position.lat,
+          lng: geo.position.lon,
+          key: Date.now(),
+          fit,
+        });
       }
     }
   }, [geo.status, geo.position]);
