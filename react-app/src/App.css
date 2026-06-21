@@ -371,3 +371,21 @@
 }
 .locate-btn:hover { filter: brightness(0.95); }
 .locate-status { font-size: 0.72rem; color: var(--muted); margin: -4px 16px 10px; }
+
+.export-btn {
+  display: block;
+  width: calc(100% - 32px);
+  margin: 4px 16px 10px;
+  padding: 9px 12px;
+  background: var(--navy);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+}
+.export-btn:hover { filter: brightness(1.1); }
+.export-btn:disabled { opacity: 0.5; cursor: default; filter: none; }
+.export-btn small { display: block; color: rgba(255, 255, 255, 0.7); font-size: 0.72rem; font-weight: 400; }

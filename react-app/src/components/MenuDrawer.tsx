@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import type { RentalLocation, ViewMode } from '../types';
 import type { UnitFilter } from '../lib';
 import { filterLocations, locationLabel, locationStreet } from '../lib';
+import { downloadLocationsCsv, unitCount } from '../exportCsv';
 import type { LocateStatus } from '../useGeolocation';
 
 interface Props {
@@ -54,6 +55,9 @@ export default function MenuDrawer({
     if (!query.trim()) return [];
     return filterLocations(locations, 'all', query).slice(0, 40);
   }, [locations, query]);
+
+  // How many unit rows an export of the current (filtered) set would produce.
+  const exportRows = useMemo(() => unitCount(locations), [locations]);
 
   return (
     <>
@@ -181,6 +185,17 @@ export default function MenuDrawer({
           {locateStatus !== 'idle' && (
             <div className="locate-status">{STATUS_TEXT[locateStatus]}</div>
           )}
+
+          {/* Export */}
+          <div className="drawer-section">Export</div>
+          <button
+            className="export-btn"
+            onClick={() => downloadLocationsCsv(locations)}
+            disabled={exportRows === 0}
+          >
+            Export to CSV
+            <small>{exportRows.toLocaleString()} rows</small>
+          </button>
 
           {/* Source */}
           <div className="drawer-section">Source</div>
