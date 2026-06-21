@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import 'leaflet/dist/leaflet.css';
 import './App.css';
 import type { RentalLocation, ViewMode } from './types';
@@ -26,6 +26,20 @@ export default function App() {
   const [showTownships, setShowTownships] = useState(true);
 
   const geo = useGeolocation();
+
+  // Only auto-fly to the user once (on the first fix). After that the marker
+  // updates silently and the locate button re-centers on demand. Without this
+  // guard the map re-centers on every geo state change, fighting the user.
+  const hasFlownToUser = useRef(false);
+  // When the locate button is pressed we want to force a re-center even after
+  // the first fix.
+  const forceFlyNext = useRef(false);
+
+  // Try to locate once on mount so the "You are here" marker drops on load.
+  useEffect(() => {
+    geo.locate({ auto: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Filtered set drives both the map markers and the list.
   const visible = useMemo(
@@ -62,14 +76,24 @@ export default function App() {
   }
 
   function handleLocate() {
+    forceFlyNext.current = true;
     geo.locate();
   }
 
-  // When a position is acquired, fly to it on the map.
+  // Fly to the user's position only on the first fix, or when the locate button
+  // explicitly requested it (forceFlyNext). Guarding the flyTo itself — not just
+  // the locate trigger — prevents a double/repeated re-center.
   useEffect(() => {
     if (geo.status === 'located' && geo.position) {
-      setView('map');
-      setFlyTo({ lat: geo.position.lat, lng: geo.position.lon, key: Date.now() });
+      const requested = forceFlyNext.current;
+      const shouldFly = !hasFlownToUser.current || requested;
+      if (shouldFly) {
+        hasFlownToUser.current = true;
+        forceFlyNext.current = false;
+        // Only yank to the map view when the user explicitly asked to locate.
+        if (requested) setView('map');
+        setFlyTo({ lat: geo.position.lat, lng: geo.position.lon, key: Date.now() });
+      }
     }
   }, [geo.status, geo.position]);
 

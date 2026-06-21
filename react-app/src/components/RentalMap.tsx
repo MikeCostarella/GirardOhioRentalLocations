@@ -92,7 +92,13 @@ export default function RentalMap({ locations, hidden, userPos, flyTo, onSelect,
           </CircleMarker>
         ))}
 
-        {userPos && <Marker position={[userPos.lat, userPos.lon]} icon={userIcon} />}
+        {userPos && (
+          <Marker position={[userPos.lat, userPos.lon]} icon={userIcon}>
+            <Tooltip direction="top" offset={[0, -10]} permanent>
+              You are here
+            </Tooltip>
+          </Marker>
+        )}
       </MapContainer>
     </div>
   );
