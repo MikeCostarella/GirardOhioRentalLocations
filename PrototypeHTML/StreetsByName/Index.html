@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rental Locations by Street</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,800&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f1ea;
+    --surface: #ffffff;
+    --ink: #1a1814;
+    --ink-soft: #5a5750;
+    --rule: #d9d2c4;
+    --accent: #c84d2a;
+    --accent-soft: #e8a890;
+    --bar-bg: #ece5d4;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.5;
+  }
+  .page { max-width: 760px; margin: 0 auto; padding: 32px 20px 80px; }
+
+  /* Header */
+  header { border-bottom: 1px solid var(--rule); padding-bottom: 24px; margin-bottom: 24px; }
+  .eyebrow {
+    font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--accent); font-weight: 600; margin-bottom: 12px;
+  }
+  h1 {
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 800; font-size: clamp(34px, 7vw, 52px);
+    line-height: 1.05; letter-spacing: -0.02em;
+    font-variation-settings: 'opsz' 144;
+  }
+  .subtitle { color: var(--ink-soft); margin-top: 10px; font-size: 15px; }
+  .byline {
+    margin-top: 16px; display: flex; flex-wrap: wrap; gap: 6px 14px;
+    font-size: 12px; color: var(--ink-soft);
+    letter-spacing: 0.04em;
+  }
+  .byline .by { color: var(--ink); font-weight: 500; }
+  .byline .dot { color: var(--rule); }
+
+  /* Stats */
+  .stats {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 1px; background: var(--rule);
+    border: 1px solid var(--rule); margin-bottom: 28px;
+  }
+  .stat { background: var(--surface); padding: 16px 14px; }
+  .stat-label {
+    font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--ink-soft); margin-bottom: 6px;
+  }
+  .stat-value {
+    font-family: 'Fraunces', serif; font-weight: 600;
+    font-size: clamp(20px, 4.5vw, 28px); line-height: 1;
+    font-variation-settings: 'opsz' 144;
+  }
+  .stat.accent .stat-value { color: var(--accent); }
+  .stat-note { font-size: 12px; color: var(--ink-soft); margin-top: 4px; }
+
+  /* Controls */
+  .controls { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+  .search {
+    width: 100%; padding: 12px 14px; font-size: 15px;
+    background: var(--surface); border: 1px solid var(--rule);
+    color: var(--ink); font-family: inherit;
+    transition: border-color .15s;
+  }
+  .search:focus { outline: none; border-color: var(--accent); }
+  .sort-row { display: flex; gap: 0; border: 1px solid var(--rule); background: var(--surface); }
+  .sort-btn {
+    flex: 1; padding: 10px 8px; background: transparent; border: 0;
+    font-family: inherit; font-size: 13px; color: var(--ink-soft);
+    cursor: pointer; border-right: 1px solid var(--rule);
+    transition: background .15s, color .15s;
+  }
+  .sort-btn:last-child { border-right: 0; }
+  .sort-btn.active { background: var(--ink); color: var(--bg); }
+  .sort-btn:hover:not(.active) { background: var(--bar-bg); }
+
+  .meta-line {
+    font-size: 12px; color: var(--ink-soft); margin: 14px 2px 8px;
+    display: flex; justify-content: space-between;
+  }
+
+  /* List */
+  .list { list-style: none; }
+  .row {
+    padding: 14px 4px; border-bottom: 1px solid var(--rule);
+    display: grid; grid-template-columns: 24px 1fr auto;
+    gap: 12px; align-items: center;
+  }
+  .rank {
+    font-family: 'Fraunces', serif; font-size: 13px;
+    color: var(--ink-soft); text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .row-body { min-width: 0; }
+  .street {
+    font-weight: 500; font-size: 15px; margin-bottom: 6px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .bar-track {
+    height: 6px; background: var(--bar-bg); position: relative; overflow: hidden;
+  }
+  .bar-fill {
+    height: 100%; background: var(--accent);
+    width: 0; transition: width .6s cubic-bezier(.2,.7,.2,1);
+  }
+  .row.top .bar-fill { background: var(--accent); }
+  .row .count {
+    font-family: 'Fraunces', serif; font-weight: 600; font-size: 18px;
+    font-variant-numeric: tabular-nums; min-width: 40px; text-align: right;
+    font-variation-settings: 'opsz' 144;
+  }
+  .row .fee {
+    font-size: 11px; color: var(--ink-soft); text-align: right;
+    margin-top: 2px; font-variant-numeric: tabular-nums;
+    letter-spacing: 0.02em;
+  }
+  .count-block { display: flex; flex-direction: column; align-items: flex-end; }
+  .empty {
+    text-align: center; padding: 40px 20px; color: var(--ink-soft);
+    font-style: italic; font-family: 'Fraunces', serif;
+  }
+
+  footer {
+    margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--rule);
+    font-size: 12px; color: var(--ink-soft); text-align: center;
+  }
+
+  /* Mobile tweaks */
+  @media (max-width: 720px) {
+    .stats { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 480px) {
+    .page { padding: 24px 16px 60px; }
+    .stats { grid-template-columns: repeat(2, 1fr); }
+    .stat { padding: 14px 16px; }
+    .row { grid-template-columns: 22px 1fr auto; gap: 10px; padding: 12px 2px; }
+    .street { font-size: 14px; }
+    .row .count { font-size: 16px; min-width: 36px; }
+    .row .fee { font-size: 11px; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <div class="eyebrow">Open Data · Rental Registry</div>
+    <h1>Rental Locations by Street</h1>
+    <p class="subtitle">A breakdown of registered rental units across every street in the dataset.</p>
+    <div class="byline">
+      <span><span class="by">Report by Mike Costarella</span></span>
+      <span class="dot">·</span>
+      <span>Last updated <span id="last-updated">—</span></span>
+    </div>
+  </header>
+
+  <section class="stats" aria-label="Summary statistics">
+    <div class="stat">
+      <div class="stat-label">Streets</div>
+      <div class="stat-value" id="stat-streets">—</div>
+      <div class="stat-note">with registered rentals</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Total Units</div>
+      <div class="stat-value" id="stat-total">—</div>
+      <div class="stat-note">across all streets</div>
+    </div>
+    <div class="stat accent">
+      <div class="stat-label">Annual Fees</div>
+      <div class="stat-value" id="stat-fees">—</div>
+      <div class="stat-note">at $25 per unit</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Top Street</div>
+      <div class="stat-value" id="stat-top-name" style="font-size:clamp(15px,3vw,18px);font-weight:600;">—</div>
+      <div class="stat-note"><span id="stat-top-count">—</span> units</div>
+    </div>
+  </section>
+
+  <div class="controls">
+    <input type="search" class="search" id="search" placeholder="Search a street name…" aria-label="Search streets">
+    <div class="sort-row" role="tablist">
+      <button class="sort-btn active" data-sort="count-desc">Most units</button>
+      <button class="sort-btn" data-sort="count-asc">Fewest units</button>
+      <button class="sort-btn" data-sort="alpha">A–Z</button>
+    </div>
+  </div>
+
+  <div class="meta-line">
+    <span id="result-count">Showing all streets</span>
+    <span id="result-sum"></span>
+  </div>
+
+  <ul class="list" id="list"></ul>
+
+  <footer>Bars are scaled relative to the street with the most units. Annual registration fee is $25 per unit per City of Girard Codified Ordinance § 1375.07.</footer>
+</div>
+
+<script>
+const DATA = [{"street":"Abbey St NE","count":7,"fee":175},{"street":"Avon Ave","count":1,"fee":25},{"street":"Beaver Ave","count":2,"fee":50},{"street":"Beechwood Ave","count":15,"fee":375},{"street":"Broadview Ave","count":1,"fee":25},{"street":"Browns Ct","count":1,"fee":25},{"street":"Cherry","count":1,"fee":25},{"street":"Churchill Rd","count":117,"fee":2925},{"street":"Clermont St","count":1,"fee":25},{"street":"Crumlin Ave","count":12,"fee":300},{"street":"Davis St","count":9,"fee":225},{"street":"Dearborn St SE","count":13,"fee":325},{"street":"Dravis St SE","count":3,"fee":75},{"street":"E 2nd St","count":19,"fee":475},{"street":"E Broadway Ave","count":40,"fee":1000},{"street":"E Howard St","count":27,"fee":675},{"street":"E Kline St","count":33,"fee":825},{"street":"E Liberty St","count":33,"fee":825},{"street":"E Prospect St","count":31,"fee":775},{"street":"Earl St SE","count":2,"fee":50},{"street":"Ella St","count":2,"fee":50},{"street":"Elruth Ct","count":168,"fee":4200},{"street":"Emma St","count":8,"fee":200},{"street":"Forsythe Ave","count":11,"fee":275},{"street":"Gary Ave SE","count":7,"fee":175},{"street":"Glendale Ave SE","count":5,"fee":125},{"street":"Gordon St","count":7,"fee":175},{"street":"Hancock St SE","count":7,"fee":175},{"street":"Hartzell St","count":1,"fee":25},{"street":"Hazel St","count":19,"fee":475},{"street":"Idaho Ave","count":5,"fee":125},{"street":"Illinois Ave","count":11,"fee":275},{"street":"Indiana Ave","count":9,"fee":225},{"street":"Iowa Ave","count":13,"fee":325},{"street":"Joan Ave SE","count":10,"fee":250},{"street":"Jones Ct SE","count":2,"fee":50},{"street":"Krehl Ave","count":7,"fee":175},{"street":"La Salle Pl SE","count":1,"fee":25},{"street":"Lawrence Ave","count":26,"fee":650},{"street":"Lincoln Ave SE","count":5,"fee":125},{"street":"Louis Ave","count":14,"fee":350},{"street":"Main St","count":26,"fee":650},{"street":"Maple Ave","count":7,"fee":175},{"street":"Marie Dr","count":13,"fee":325},{"street":"Moccasin Trail","count":1,"fee":25},{"street":"Morris Ave","count":18,"fee":450},{"street":"Mosier Rd","count":4,"fee":100},{"street":"N Davis St","count":4,"fee":100},{"street":"N Highland Ave","count":115,"fee":2875},{"street":"N Lorain Ave SE","count":3,"fee":75},{"street":"N Randolph Ave","count":1,"fee":25},{"street":"N St Clair St","count":9,"fee":225},{"street":"N State St","count":10,"fee":250},{"street":"N Stewart","count":2,"fee":50},{"street":"N Ward Ave","count":32,"fee":800},{"street":"North Ave","count":25,"fee":625},{"street":"Norwood","count":1,"fee":25},{"street":"Oak St","count":1,"fee":25},{"street":"Ohio","count":13,"fee":325},{"street":"Olive St","count":9,"fee":225},{"street":"Otis Ct SE","count":1,"fee":25},{"street":"Park Ave","count":82,"fee":2050},{"street":"Parkview Dr","count":1,"fee":25},{"street":"Patricia Dr","count":89,"fee":2225},{"street":"Plymouth Ave SE","count":11,"fee":275},{"street":"Powers Ave","count":6,"fee":150},{"street":"Reeds Ct","count":4,"fee":100},{"street":"S Elruth Ave","count":19,"fee":475},{"street":"S Elruth Ct","count":1,"fee":25},{"street":"S Lorain Ave SE","count":5,"fee":125},{"street":"S Market St","count":9,"fee":225},{"street":"S Patricia Dr","count":32,"fee":800},{"street":"S Randolph Ave SE","count":6,"fee":150},{"street":"S State St","count":2,"fee":50},{"street":"S Stewart Ave SE","count":4,"fee":100},{"street":"S Ward Ave SE","count":2,"fee":50},{"street":"Shannon Rd","count":10,"fee":250},{"street":"Shelby St","count":5,"fee":125},{"street":"Smithsonian St","count":15,"fee":375},{"street":"Squaw Creek Dr","count":3,"fee":75},{"street":"St Clair St","count":2,"fee":50},{"street":"Stambaugh St","count":13,"fee":325},{"street":"Steel St","count":4,"fee":100},{"street":"Stull Ave","count":24,"fee":600},{"street":"Taylor","count":7,"fee":175},{"street":"Tod Ave","count":4,"fee":100},{"street":"Townsend Ave","count":14,"fee":350},{"street":"Trumbull Ave","count":11,"fee":275},{"street":"Verona St SE","count":3,"fee":75},{"street":"W 2nd St","count":9,"fee":225},{"street":"W Broadway Ave","count":2,"fee":50},{"street":"W Howard St","count":3,"fee":75},{"street":"W Kline St SE","count":1,"fee":25},{"street":"W Liberty St","count":15,"fee":375},{"street":"W Liberty St SE","count":1,"fee":25},{"street":"W Prospect St","count":3,"fee":75},{"street":"W. Wilson Ave","count":3,"fee":75},{"street":"Washington Ave","count":29,"fee":725},{"street":"Wellman Ave SE","count":1,"fee":25},{"street":"Williams Ct","count":1,"fee":25},{"street":"Wilson Ave","count":22,"fee":550},{"street":"Woodlawn Ave","count":12,"fee":300}];
+
+const MAX = Math.max(...DATA.map(d => d.count));
+const TOTAL = DATA.reduce((s, d) => s + d.count, 0);
+const TOTAL_FEES = DATA.reduce((s, d) => s + d.fee, 0);
+const TOP = DATA.reduce((a, b) => a.count >= b.count ? a : b);
+
+document.getElementById('stat-streets').textContent = DATA.length.toLocaleString();
+document.getElementById('stat-total').textContent = TOTAL.toLocaleString();
+document.getElementById('stat-fees').textContent = '$' + TOTAL_FEES.toLocaleString();
+document.getElementById('stat-top-name').textContent = TOP.street;
+document.getElementById('stat-top-count').textContent = TOP.count.toLocaleString();
+
+// Last-updated timestamp (set when page loads in viewer's local time)
+const now = new Date();
+const dateStr = now.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+const timeStr = now.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+document.getElementById('last-updated').textContent = `${dateStr} at ${timeStr}`;
+
+let currentSort = 'count-desc';
+let currentQuery = '';
+
+function getSortedFiltered() {
+  const q = currentQuery.trim().toLowerCase();
+  let arr = q ? DATA.filter(d => d.street.toLowerCase().includes(q)) : DATA.slice();
+  if (currentSort === 'count-desc') arr.sort((a,b) => b.count - a.count || a.street.localeCompare(b.street));
+  else if (currentSort === 'count-asc') arr.sort((a,b) => a.count - b.count || a.street.localeCompare(b.street));
+  else arr.sort((a,b) => a.street.localeCompare(b.street));
+  return arr;
+}
+
+function render() {
+  const arr = getSortedFiltered();
+  const list = document.getElementById('list');
+
+  if (arr.length === 0) {
+    list.innerHTML = '<li class="empty">No streets match your search.</li>';
+    document.getElementById('result-count').textContent = 'No matches';
+    document.getElementById('result-sum').textContent = '';
+    return;
+  }
+
+  const sum = arr.reduce((s,d) => s + d.count, 0);
+  const feeSum = arr.reduce((s,d) => s + d.fee, 0);
+  document.getElementById('result-count').textContent =
+    arr.length === DATA.length ? `Showing all ${arr.length} streets` : `${arr.length} of ${DATA.length} streets`;
+  document.getElementById('result-sum').textContent = `${sum.toLocaleString()} units · $${feeSum.toLocaleString()}`;
+
+  const showRank = currentSort.startsWith('count');
+  const html = arr.map((d, i) => {
+    const pct = (d.count / MAX) * 100;
+    const isTop = d.count === MAX;
+    const rank = showRank ? (currentSort === 'count-desc' ? i + 1 : arr.length - i) : '';
+    return `
+      <li class="row${isTop ? ' top' : ''}">
+        <div class="rank">${rank}</div>
+        <div class="row-body">
+          <div class="street">${escapeHtml(d.street)}</div>
+          <div class="bar-track"><div class="bar-fill" data-pct="${pct}"></div></div>
+        </div>
+        <div class="count-block">
+          <div class="count">${d.count}</div>
+          <div class="fee">$${d.fee.toLocaleString()}</div>
+        </div>
+      </li>`;
+  }).join('');
+  list.innerHTML = html;
+
+  // Animate bars
+  requestAnimationFrame(() => {
+    list.querySelectorAll('.bar-fill').forEach(el => {
+      el.style.width = el.dataset.pct + '%';
+    });
+  });
+}
+
+function escapeHtml(s) {
+  return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+document.getElementById('search').addEventListener('input', e => {
+  currentQuery = e.target.value;
+  render();
+});
+
+document.querySelectorAll('.sort-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentSort = btn.dataset.sort;
+    render();
+  });
+});
+
+render();
+</script>
+</body>
+</html>
