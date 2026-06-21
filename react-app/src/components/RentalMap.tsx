@@ -11,6 +11,7 @@ interface Props {
   userPos: { lat: number; lon: number } | null;
   flyTo: { lat: number; lng: number; key: number; fit?: boolean } | null;
   onSelect: (loc: RentalLocation) => void;
+  onUserClick: () => void;
   showMunicipalities: boolean;
   showTownships: boolean;
 }
@@ -64,7 +65,7 @@ function ResizeOnShow({ hidden }: { hidden: boolean }) {
   return null;
 }
 
-export default function RentalMap({ locations, hidden, userPos, flyTo, onSelect, showMunicipalities, showTownships }: Props) {
+export default function RentalMap({ locations, hidden, userPos, flyTo, onSelect, onUserClick, showMunicipalities, showTownships }: Props) {
   // Render order: multi on top of single so the rarer markers stay visible.
   const ordered = useMemo(
     () => [...locations].sort((a, b) => Number(a.multi) - Number(b.multi)),
@@ -106,7 +107,11 @@ export default function RentalMap({ locations, hidden, userPos, flyTo, onSelect,
         ))}
 
         {userPos && (
-          <Marker position={[userPos.lat, userPos.lon]} icon={userIcon}>
+          <Marker
+            position={[userPos.lat, userPos.lon]}
+            icon={userIcon}
+            eventHandlers={{ click: onUserClick }}
+          >
             <Tooltip direction="top" offset={[0, -10]} permanent>
               You are here
             </Tooltip>

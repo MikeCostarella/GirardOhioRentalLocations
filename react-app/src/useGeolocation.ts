@@ -10,6 +10,7 @@ export type LocateStatus =
 export interface LocateState {
   status: LocateStatus;
   position: { lat: number; lon: number } | null;
+  accuracy: number | null; // meters, from the GPS fix
 }
 
 // Rough Girard, Ohio bounding box (with a little padding) so we can tell the
@@ -35,6 +36,7 @@ export function useGeolocation() {
   const [state, setState] = useState<LocateState>({
     status: 'idle',
     position: null,
+    accuracy: null,
   });
   // Guard so an auto-attempt only fires once.
   const attempted = useRef(false);
@@ -45,7 +47,7 @@ export function useGeolocation() {
       attempted.current = true;
     }
     if (!('geolocation' in navigator)) {
-      setState({ status: 'error', position: null });
+      setState({ status: 'error', position: null, accuracy: null });
       return;
     }
     setState((s) => ({ ...s, status: 'locating' }));
@@ -54,12 +56,14 @@ export function useGeolocation() {
         setState({
           status: 'located',
           position: { lat: pos.coords.latitude, lon: pos.coords.longitude },
+          accuracy: pos.coords.accuracy ?? null,
         });
       },
       (err) => {
         setState({
           status: err.code === err.PERMISSION_DENIED ? 'denied' : 'error',
           position: null,
+          accuracy: null,
         });
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }

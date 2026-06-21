@@ -9,6 +9,7 @@ import RentalMap from './components/RentalMap';
 import RentalList from './components/RentalList';
 import MenuDrawer from './components/MenuDrawer';
 import DetailsModal from './components/DetailsModal';
+import LocationDialog from './components/LocationDialog';
 import rawLocations from './data/locations.json';
 
 const ALL_LOCATIONS = rawLocations as RentalLocation[];
@@ -19,6 +20,7 @@ export default function App() {
   const [filter, setFilter] = useState<UnitFilter>('all');
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState<RentalLocation | null>(null);
+  const [userDialogOpen, setUserDialogOpen] = useState(false);
   const [flyTo, setFlyTo] = useState<{ lat: number; lng: number; key: number; fit?: boolean } | null>(null);
 
   // Boundary overlays default ON.
@@ -158,6 +160,10 @@ export default function App() {
           userPos={userPos}
           flyTo={flyTo}
           onSelect={(loc) => selectLocation(loc, false)}
+          onUserClick={() => {
+            setSelected(null);
+            setUserDialogOpen(true);
+          }}
           showMunicipalities={showMunicipalities}
           showTownships={showTownships}
         />
@@ -192,6 +198,13 @@ export default function App() {
         location={selected}
         onClose={() => setSelected(null)}
         onGoToMap={view === 'list' ? goToOnMap : undefined}
+      />
+
+      <LocationDialog
+        position={userPos}
+        accuracy={geo.accuracy}
+        open={userDialogOpen}
+        onClose={() => setUserDialogOpen(false)}
       />
     </div>
   );
