@@ -75,13 +75,19 @@ export default function MenuDrawer({
           <div className="seg">
             <button
               className={view === 'map' ? 'active' : ''}
-              onClick={() => setView('map')}
+              onClick={() => {
+                setView('map');
+                onClose();
+              }}
             >
               Map
             </button>
             <button
               className={view === 'list' ? 'active' : ''}
-              onClick={() => setView('list')}
+              onClick={() => {
+                setView('list');
+                onClose();
+              }}
             >
               List
             </button>
