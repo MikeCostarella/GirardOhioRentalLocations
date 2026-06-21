@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import 'leaflet/dist/leaflet.css';
 import './App.css';
 import type { RentalLocation, ViewMode } from './types';
@@ -21,6 +21,7 @@ export default function App() {
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState<RentalLocation | null>(null);
   const [userDialogOpen, setUserDialogOpen] = useState(false);
+  const [highlight, setHighlight] = useState<{ lat: number; lng: number } | null>(null);
   const [flyTo, setFlyTo] = useState<{ lat: number; lng: number; key: number; fit?: boolean } | null>(null);
 
   // Boundary overlays default ON.
@@ -83,10 +84,13 @@ export default function App() {
   function goToOnMap(loc: RentalLocation) {
     setSelected(null);
     setView('map');
+    setHighlight({ lat: loc.lat, lng: loc.lng });
     window.setTimeout(() => {
       setFlyTo({ lat: loc.lat, lng: loc.lng, key: Date.now() });
     }, 120);
   }
+
+  const clearHighlight = useCallback(() => setHighlight(null), []);
 
   function handleLocate() {
     forceFlyNext.current = true;
@@ -164,6 +168,8 @@ export default function App() {
             setSelected(null);
             setUserDialogOpen(true);
           }}
+          highlight={highlight}
+          onClearHighlight={clearHighlight}
           showMunicipalities={showMunicipalities}
           showTownships={showTownships}
         />

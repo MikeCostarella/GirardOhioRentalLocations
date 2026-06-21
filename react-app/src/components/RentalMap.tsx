@@ -12,6 +12,8 @@ interface Props {
   flyTo: { lat: number; lng: number; key: number; fit?: boolean } | null;
   onSelect: (loc: RentalLocation) => void;
   onUserClick: () => void;
+  highlight: { lat: number; lng: number } | null;
+  onClearHighlight: () => void;
   showMunicipalities: boolean;
   showTownships: boolean;
 }
@@ -25,6 +27,66 @@ const userIcon = L.divIcon({
   iconSize: [18, 18],
   iconAnchor: [9, 9],
 });
+
+// Pulsing amber hollow ring dropped on the location the user jumped to via
+// "Go To on Map", so it stands out among the markers.
+const highlightIcon = L.divIcon({
+  className: '',
+  html: '<div class="loc-highlight"><div class="ring"></div></div>',
+  iconSize: [44, 44],
+  iconAnchor: [22, 22],
+});
+
+// Drops the amber ring on the jumped-to location and clears it when the user
+// pans/zooms. The pan-to-clear listener is armed only AFTER the programmatic
+// flyTo from "Go To on Map" settles (moveend), so the arrival fly itself
+// doesn't immediately clear the highlight; a fallback timer arms it in case no
+// moveend fires (target already in view).
+function SelectedHighlight({
+  location,
+  onClear,
+}: {
+  location: { lat: number; lng: number } | null;
+  onClear: () => void;
+}) {
+  const map = useMap();
+  useEffect(() => {
+    if (!location) return;
+    let armed = false;
+    const arm = () => {
+      armed = true;
+    };
+    const clearOnInteract = () => {
+      if (armed) onClear();
+    };
+    const onMoveEnd = () => {
+      window.setTimeout(arm, 250);
+      map.off('moveend', onMoveEnd);
+    };
+    map.on('moveend', onMoveEnd);
+    map.on('dragstart', clearOnInteract);
+    map.on('zoomstart', clearOnInteract);
+    // Fallback: if the target is already in view, no moveend fires — arm anyway.
+    const fallback = window.setTimeout(arm, 1600);
+    return () => {
+      window.clearTimeout(fallback);
+      map.off('moveend', onMoveEnd);
+      map.off('dragstart', clearOnInteract);
+      map.off('zoomstart', clearOnInteract);
+    };
+  }, [location, map, onClear]);
+
+  if (!location) return null;
+  return (
+    <Marker
+      position={[location.lat, location.lng]}
+      icon={highlightIcon}
+      interactive={false}
+      keyboard={false}
+      zIndexOffset={900}
+    />
+  );
+}
 
 // Imperatively move the map when a search result / list row is chosen, or when
 // the user is located. If `fit` is set (user is outside the Girard area) we fit
@@ -65,7 +127,7 @@ function ResizeOnShow({ hidden }: { hidden: boolean }) {
   return null;
 }
 
-export default function RentalMap({ locations, hidden, userPos, flyTo, onSelect, onUserClick, showMunicipalities, showTownships }: Props) {
+export default function RentalMap({ locations, hidden, userPos, flyTo, onSelect, onUserClick, highlight, onClearHighlight, showMunicipalities, showTownships }: Props) {
   // Render order: multi on top of single so the rarer markers stay visible.
   const ordered = useMemo(
     () => [...locations].sort((a, b) => Number(a.multi) - Number(b.multi)),
@@ -117,6 +179,8 @@ export default function RentalMap({ locations, hidden, userPos, flyTo, onSelect,
             </Tooltip>
           </Marker>
         )}
+
+        <SelectedHighlight location={highlight} onClear={onClearHighlight} />
       </MapContainer>
     </div>
   );
