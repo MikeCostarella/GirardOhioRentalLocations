@@ -292,6 +292,28 @@
 .seg button + button { border-left: 1px solid var(--line); }
 .seg button.active { background: var(--navy); color: #fff; font-weight: 600; }
 
+/* Map Layers checkboxes */
+.layer-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 16px;
+  font-size: 0.85rem;
+  color: var(--ink);
+  cursor: pointer;
+}
+.layer-toggle input { cursor: pointer; margin: 0; }
+.layer-swatch {
+  width: 18px;
+  height: 0;
+  border-top-width: 3px;
+  border-top-style: solid;
+  display: inline-block;
+  flex-shrink: 0;
+}
+.layer-swatch.muni { border-top-style: dashed; border-top-color: #c2410c; }
+.layer-swatch.twp { border-top-color: #3730a3; }
+
 .drawer-link {
   display: block;
   padding: 10px 16px;

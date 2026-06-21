@@ -21,6 +21,10 @@ export default function App() {
   const [selected, setSelected] = useState<RentalLocation | null>(null);
   const [flyTo, setFlyTo] = useState<{ lat: number; lng: number; key: number } | null>(null);
 
+  // Boundary overlays default ON.
+  const [showMunicipalities, setShowMunicipalities] = useState(true);
+  const [showTownships, setShowTownships] = useState(true);
+
   const geo = useGeolocation();
 
   // Filtered set drives both the map markers and the list.
@@ -111,6 +115,8 @@ export default function App() {
           userPos={userPos}
           flyTo={flyTo}
           onSelect={(loc) => selectLocation(loc, false)}
+          showMunicipalities={showMunicipalities}
+          showTownships={showTownships}
         />
         {view === 'list' && (
           <RentalList
@@ -133,6 +139,10 @@ export default function App() {
         onPick={pickFromSearch}
         onLocate={handleLocate}
         locateStatus={geo.status}
+        showMunicipalities={showMunicipalities}
+        setShowMunicipalities={setShowMunicipalities}
+        showTownships={showTownships}
+        setShowTownships={setShowTownships}
       />
 
       <DetailsModal location={selected} onClose={() => setSelected(null)} />

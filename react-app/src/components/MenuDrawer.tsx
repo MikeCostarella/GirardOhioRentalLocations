@@ -17,6 +17,10 @@ interface Props {
   onPick: (loc: RentalLocation) => void;
   onLocate: () => void;
   locateStatus: LocateStatus;
+  showMunicipalities: boolean;
+  setShowMunicipalities: (v: boolean) => void;
+  showTownships: boolean;
+  setShowTownships: (v: boolean) => void;
 }
 
 const STATUS_TEXT: Record<LocateStatus, string> = {
@@ -40,6 +44,10 @@ export default function MenuDrawer({
   onPick,
   onLocate,
   locateStatus,
+  showMunicipalities,
+  setShowMunicipalities,
+  showTownships,
+  setShowTownships,
 }: Props) {
   // Live search results (capped) for the search box inside the drawer.
   const results = useMemo(() => {
@@ -78,6 +86,31 @@ export default function MenuDrawer({
               List
             </button>
           </div>
+
+          {/* Map Layers — boundary overlays, only meaningful in map view */}
+          {view === 'map' && (
+            <>
+              <div className="drawer-section">Map Layers</div>
+              <label className="layer-toggle">
+                <input
+                  type="checkbox"
+                  checked={showMunicipalities}
+                  onChange={(e) => setShowMunicipalities(e.target.checked)}
+                />
+                <span className="layer-swatch muni" />
+                Municipalities
+              </label>
+              <label className="layer-toggle">
+                <input
+                  type="checkbox"
+                  checked={showTownships}
+                  onChange={(e) => setShowTownships(e.target.checked)}
+                />
+                <span className="layer-swatch twp" />
+                Townships
+              </label>
+            </>
+          )}
 
           {/* Filter */}
           <div className="drawer-section">Show</div>

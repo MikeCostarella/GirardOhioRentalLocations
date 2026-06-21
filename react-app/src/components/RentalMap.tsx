@@ -3,6 +3,7 @@ import { MapContainer, TileLayer, CircleMarker, Marker, Tooltip, useMap } from '
 import L from 'leaflet';
 import type { RentalLocation } from '../types';
 import { locationLabel } from '../lib';
+import BoundaryLayers from './BoundaryLayers';
 
 interface Props {
   locations: RentalLocation[];
@@ -10,6 +11,8 @@ interface Props {
   userPos: { lat: number; lon: number } | null;
   flyTo: { lat: number; lng: number; key: number } | null;
   onSelect: (loc: RentalLocation) => void;
+  showMunicipalities: boolean;
+  showTownships: boolean;
 }
 
 const GIRARD_CENTER: [number, number] = [41.1554, -80.6936];
@@ -48,7 +51,7 @@ function ResizeOnShow({ hidden }: { hidden: boolean }) {
   return null;
 }
 
-export default function RentalMap({ locations, hidden, userPos, flyTo, onSelect }: Props) {
+export default function RentalMap({ locations, hidden, userPos, flyTo, onSelect, showMunicipalities, showTownships }: Props) {
   // Render order: multi on top of single so the rarer markers stay visible.
   const ordered = useMemo(
     () => [...locations].sort((a, b) => Number(a.multi) - Number(b.multi)),
@@ -64,6 +67,11 @@ export default function RentalMap({ locations, hidden, userPos, flyTo, onSelect 
         />
         <ResizeOnShow hidden={hidden} />
         <FlyController flyTo={flyTo} />
+
+        <BoundaryLayers
+          showMunicipalities={showMunicipalities}
+          showTownships={showTownships}
+        />
 
         {ordered.map((loc, i) => (
           <CircleMarker
