@@ -185,9 +185,26 @@
   padding-top: 10px; border-top: 1px solid #e0e6f0;
 }
 .coords .row { flex: 1; margin: 0; }
+.dlg-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+.goto-btn {
+  display: inline-block;
+  background: #2b7de9;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+.goto-btn:hover { background: #1f63bd; }
 .gmaps-btn {
   display: inline-block;
-  margin-top: 12px;
   background: var(--navy);
   color: #fff;
   text-decoration: none;

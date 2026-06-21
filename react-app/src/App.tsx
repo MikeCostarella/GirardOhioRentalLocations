@@ -75,6 +75,17 @@ export default function App() {
     setFlyTo({ lat: loc.lat, lng: loc.lng, key: Date.now() });
   }
 
+  // From the list view's details dialog: close the dialog, switch to the map,
+  // and fly to the location. A short delay lets the map container become
+  // visible and re-measure (it's hidden in list view) before the flyTo runs.
+  function goToOnMap(loc: RentalLocation) {
+    setSelected(null);
+    setView('map');
+    window.setTimeout(() => {
+      setFlyTo({ lat: loc.lat, lng: loc.lng, key: Date.now() });
+    }, 120);
+  }
+
   function handleLocate() {
     forceFlyNext.current = true;
     geo.locate();
@@ -177,7 +188,11 @@ export default function App() {
         setShowTownships={setShowTownships}
       />
 
-      <DetailsModal location={selected} onClose={() => setSelected(null)} />
+      <DetailsModal
+        location={selected}
+        onClose={() => setSelected(null)}
+        onGoToMap={view === 'list' ? goToOnMap : undefined}
+      />
     </div>
   );
 }

@@ -4,9 +4,10 @@ import { formatUnitAddress, hasAccount, locationStreet } from '../lib';
 interface Props {
   location: RentalLocation | null;
   onClose: () => void;
+  onGoToMap?: (location: RentalLocation) => void;
 }
 
-export default function DetailsModal({ location, onClose }: Props) {
+export default function DetailsModal({ location, onClose, onGoToMap }: Props) {
   if (!location) return null;
 
   const gmaps = `https://www.google.com/maps/search/?api=1&query=${location.lat},${location.lng}`;
@@ -59,9 +60,16 @@ export default function DetailsModal({ location, onClose }: Props) {
             </div>
           </div>
 
-          <a className="gmaps-btn" href={gmaps} target="_blank" rel="noopener noreferrer">
-            Open in Google Maps
-          </a>
+          <div className="dlg-actions">
+            {onGoToMap && (
+              <button className="goto-btn" onClick={() => onGoToMap(location)}>
+                Go To on Map
+              </button>
+            )}
+            <a className="gmaps-btn" href={gmaps} target="_blank" rel="noopener noreferrer">
+              Open in Google Maps
+            </a>
+          </div>
         </div>
       </div>
     </div>
